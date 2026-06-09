@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>מונדיאל 2026 🏆</title>
+<style>
+  :root {
+    --bg: #060b14;
+    --surface: #0f1923;
+    --surface2: #172030;
+    --border: #1e3350;
+    --accent: #00c2ff;
+    --accent2: #f5a623;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --text: #e2eaf5;
+    --muted: #5a7a9a;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body { font-family: -apple-system, 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); direction: rtl; min-height: 100vh; }
+  .header { background: linear-gradient(160deg, #071428 0%, #0d2347 50%, #071428 100%); border-bottom: 1px solid var(--border); padding: 14px 16px 0; position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .header-top h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-top h1 span { color: var(--accent); }
+  .live-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--green); font-weight: 600; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(0.8)} }
+  .tabs { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .2s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .page { display: none; padding: 14px 12px; }
+  .page.active { display: block; }
+  .match-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 8px; overflow: hidden; }
+  .match-meta { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .match-meta-left { display: flex; align-items: center; gap: 8px; }
+  .group-badge { font-size: 10px; font-weight: 700; background: var(--border); color: var(--accent); padding: 2px 7px; border-radius: 4px; }
+  .match-status { font-size: 11px; font-weight: 700; }
+  .match-status.live { color: var(--green); }
+  .match-status.fin { color: var(--muted); }
+  .match-status.sched { color: var(--accent2); }
+  .match-body { display: flex; align-items: center; padding: 12px; gap: 8px; }
+  .team { flex: 1; }
+  .team.home { text-align: right; }
+  .team.away { text-align: left; }
+  .team-name { font-size: 14px; font-weight: 700; }
+  .team-flag { font-size: 22px; display: block; margin-bottom: 2px; }
+  .score-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; text-align: center; min-width: 72px; }
+  .score-box .score { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: 2px; }
+  .score-box .score.played { color: var(--accent); }
+  .score-box .time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .predict-row { padding: 0 12px 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .predict-btn { flex: 1; min-width: 120px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 6px 10px; border-radius: 6px; cursor: pointer; text-align: center; transition: all .2s; }
+  .predict-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .predict-btn.has-pred { border-color: var(--accent2); color: var(--accent2); }
+  .predict-btn.correct { border-color: var(--green); color: var(--green); }
+  .predict-btn.wrong { border-color: var(--red); color: var(--red); }
+  .groups-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width: 480px) { .groups-grid { grid-template-columns: 1fr; } }
+  .group-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .group-title { background: var(--surface2); padding: 8px 12px; font-size: 12px; font-weight: 800; color: var(--accent); letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .gt { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .gt th { color: var(--muted); font-weight: 600; padding: 5px 8px; text-align: center; font-size: 10px; background: var(--bg); }
+  .gt th:first-child { text-align: right; }
+  .gt td { padding: 7px 8px; border-top: 1px solid var(--border); text-align: center; }
+  .gt td:first-child { text-align: right; font-weight: 600; }
+  .gt tr.q1, .gt tr.q2 { border-right: 3px solid var(--green); }
+  .gt tr.q3 { border-right: 3px solid var(--amber); }
+  .pts-cell { font-weight: 800; color: var(--accent) !important; }
+  .team-cell { display: flex; align-items: center; gap: 5px; }
+  .lb-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
+  .lb-header { padding: 12px 14px; background: var(--surface2); border-bottom: 1px solid var(--border); font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; }
+  .lb-row { display: flex; align-items: center; padding: 10px 14px; border-top: 1px solid var(--border); gap: 10px; }
+  .lb-rank { font-size: 16px; font-weight: 900; color: var(--muted); min-width: 28px; text-align: center; }
+  .lb-name { flex: 1; font-weight: 700; font-size: 14px; }
+  .lb-pts { font-weight: 900; font-size: 18px; color: var(--accent); }
+  .lb-detail { font-size: 11px; color: var(--muted); }
+  .score-legend { display: flex; gap: 10px; flex-wrap: wrap; padding: 10px 14px; font-size: 11px; color: var(--muted); }
+  .score-legend span { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px 18px 0 0; padding: 20px 18px 32px; width: 100%; max-width: 480px; }
+  .modal h3 { font-size: 15px; text-align: center; margin-bottom: 16px; }
+  .modal-teams { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; font-size: 14px; font-weight: 700; }
+  .modal-score-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; }
+  .pred-input { width: 64px; height: 64px; background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; color: var(--text); font-size: 28px; font-weight: 900; text-align: center; }
+  .pred-input:focus { outline: none; border-color: var(--accent); }
+  .modal-sep { font-size: 22px; color: var(--muted); }
+  .modal-name-row { margin-bottom: 14px; }
+  .modal-name-row label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
+  .name-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 15px; padding: 10px 12px; direction: rtl; }
+  .name-input:focus { outline: none; border-color: var(--accent); }
+  .btn-save { width: 100%; background: var(--accent); color: var(--bg); font-size: 15px; font-weight: 800; padding: 13px; border: none; border-radius: 10px; cursor: pointer; }
+  .btn-cancel { width: 100%; background: transparent; color: var(--muted); font-size: 13px; padding: 10px; border: none; cursor: pointer; margin-top: 6px; }
+  .match-venue { font-size: 11px; color: var(--muted); padding: 4px 12px 6px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 4px; }
+  .predict-btn.del-btn { flex: 0; min-width: 36px; padding: 6px; color: var(--red); border-color: var(--red); opacity: 0.6; }
+  .predict-btn.del-btn:hover { opacity: 1; }
+  .stats-bar { display: flex; gap: 8px; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; }
+  .stat-item { text-align: center; flex: 1; }
+  .stat-num { font-size: 22px; font-weight: 900; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; } font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin: 14px 0 8px; }
+  .empty { text-align: center; color: var(--muted); padding: 30px; font-size: 13px; }
+  .refresh-bar { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); padding: 6px 4px 10px; }
+  .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--accent); font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+  .error-bar { background: #2d1010; border: 1px solid #5a1f1f; color: #ff8080; font-size: 12px; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
+  .loading { text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-left: 6px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>🏆 מונדיאל <span>2026</span></h1>
+    <div class="live-badge"><div class="live-dot"></div> עדכון חי</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showPage('scores')">⚽ משחקים</div>
+    <div class="tab" onclick="showPage('groups')">🏟 בתים</div>
+    <div class="tab" onclick="showPage('leaderboard')">🏅 הימורים</div>
+    <div class="tab" onclick="showPage('stats')">📊 סטטיסטיקה</div>
+  </div>
+</div>
+
+<div class="page active" id="page-scores">
+  <div class="refresh-bar">
+    <span id="last-update">טוען נתונים...</span>
+    <button class="refresh-btn" onclick="loadAll()">↻ רענן</button>
+  </div>
+  <div id="scores-error" style="display:none"></div>
+  <div id="scores-content"><div class="loading">טוען משחקים <span class="spinner"></span></div></div>
+</div>
+
+<div class="page" id="page-groups">
+  <div id="groups-content"><div class="loading">טוען טבלאות <span class="spinner"></span></div></div>
+</div>
+
+<div class="page" id="page-leaderboard">
+  <div class="lb-card">
+    <div class="lb-header"><span>🏅 לוח תחזיות</span><span id="lb-games-count" style="font-size:12px;color:var(--muted)"></span></div>
+    <div class="score-legend">
+      <span><div class="dot" style="background:var(--green)"></div> תוצאה מדויקת = 3 נק'</span>
+      <span><div class="dot" style="background:var(--accent2)"></div> כיוון נכון = 1 נק'</span>
+    </div>
+  </div>
+  <div id="lb-content"><div class="empty">אין תחזיות עדיין<br><small>לחץ על משחק כדי לנחש תוצאה</small></div></div>
+</div>
+
+<div class="page" id="page-stats">
+  <div id="stats-content"><div class="loading">טוען סטטיסטיקות <span class="spinner"></span></div></div>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3 id="modal-title">ניחוש תוצאה</h3>
+    <div class="modal-teams" id="modal-teams"></div>
+    <div class="modal-name-row">
+      <label>השם שלך</label>
+      <input class="name-input" id="pred-name" placeholder="לדוגמה: יוסי" maxlength="20">
+    </div>
+    <div class="modal-score-row">
+      <input type="number" class="pred-input" id="pred-home" min="0" max="20" placeholder="0">
+      <span class="modal-sep">:</span>
+      <input type="number" class="pred-input" id="pred-away" min="0" max="20" placeholder="0">
+    </div>
+    <button class="btn-save" onclick="savePrediction()">שמור ניחוש ✓</button>
+    <button class="btn-cancel" onclick="closeModal()">ביטול</button>
+  </div>
+</div>
+
+<script>
+// ── API via Netlify Function (bypasses CORS) ──
+const API_PROXY = '/.netlify/functions/api';
+
+const FLAGS = {
+  'Mexico':'🇲🇽','South Africa':'🇿🇦','Korea Republic':'🇰🇷','Czechia':'🇨🇿',
+  'Canada':'🇨🇦','Bosnia and Herzegovina':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭',
+  'Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'United States':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Türkiye':'🇹🇷',
+  'Germany':'🇩🇪','Curaçao':'🇨🇼',"Côte d'Ivoire":'🇨🇮','Ecuador':'🇪🇨',
+  'Netherlands':'🇳🇱','Japan':'🇯🇵','Sweden':'🇸🇪','Tunisia':'🇹🇳',
+  'Spain':'🇪🇸','Cape Verde':'🇨🇻','Saudi Arabia':'🇸🇦','Uruguay':'🇺🇾',
+  'Belgium':'🇧🇪','Egypt':'🇪🇬','Iran':'🇮🇷','New Zealand':'🇳🇿',
+  'Portugal':'🇵🇹','DR Congo':'🇨🇩','Uzbekistan':'🇺🇿','Colombia':'🇨🇴',
+  'Argentina':'🇦🇷','Algeria':'🇩🇿','Austria':'🇦🇹','Jordan':'🇯🇴',
+  'France':'🇫🇷','Senegal':'🇸🇳','Iraq':'🇮🇶','Norway':'🇳🇴',
+  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦',
+};
+
+const NAME_HE = {
+  'Mexico':'מקסיקו','South Africa':'ד. אפריקה','Korea Republic':'קוריאה','Czechia':"צ'כיה",
+  'Canada':'קנדה','Bosnia and Herzegovina':'בוסניה','Qatar':'קטאר','Switzerland':'שוויץ',
+  'Brazil':'ברזיל','Morocco':'מרוקו','Haiti':'האיטי','Scotland':'סקוטלנד',
+  'United States':'ארה"ב','Paraguay':'פרגוואי','Australia':'אוסטרליה','Türkiye':'טורקיה',
+  'Germany':'גרמניה','Curaçao':'קוראסאו',"Côte d'Ivoire":'ח. השנהב','Ecuador':'אקוודור',
+  'Netherlands':'הולנד','Japan':'יפן','Sweden':'שוודיה','Tunisia':'תוניסיה',
+  'Spain':'ספרד','Cape Verde':'כף ורדה','Saudi Arabia':'סעודיה','Uruguay':'אורוגוואי',
+  'Belgium':'בלגיה','Egypt':'מצרים','Iran':'איראן','New Zealand':'ניו זילנד',
+  'Portugal':'פורטוגל','DR Congo':'קונגו DR','Uzbekistan':'אוזבקיסטן','Colombia':'קולומביה',
+  'Argentina':'ארגנטינה','Algeria':"אלג'יריה",'Austria':'אוסטריה','Jordan':'ירדן',
+  'France':'צרפת','Senegal':'סנגל','Iraq':'עיראק','Norway':'נורווגיה',
+  'England':'אנגליה','Croatia':'קרואטיה','Ghana':'גאנה','Panama':'פנמה',
+};
+
+const STORAGE_KEY = 'wc2026_predictions_v2';
+let allMatches = [], standings = [], predictions = loadPreds(), currentMatchId = null;
+
+function loadPreds() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); } catch(e) { return {}; } }
+function savePreds() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(predictions)); } catch(e) {} }
+
+async function apiFetch(path) {
+  const r = await fetch(`${API_PROXY}?path=${encodeURIComponent(path)}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function loadAll() {
+  document.getElementById('last-update').textContent = 'מעדכן...';
+  document.getElementById('scores-error').style.display = 'none';
+  try {
+    const [matchData, standData] = await Promise.all([
+      apiFetch('/competitions/2000/matches?season=2026'),
+      apiFetch('/competitions/2000/standings?season=2026')
+    ]);
+    allMatches = matchData.matches || [];
+    standings = standData.standings || [];
+    const t = new Date();
+    document.getElementById('last-update').textContent = `עודכן: ${t.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}`;
+    renderScores(); renderGroups(); renderLeaderboard(); renderStats();
+  } catch(e) {
+    document.getElementById('last-update').textContent = 'שגיאה';
+    const el = document.getElementById('scores-error');
+    el.style.display = 'block';
+    el.className = 'error-bar';
+    el.innerHTML = `⚠️ שגיאה בטעינה: ${e.message}`;
+  }
+}
+
+// ── BROADCAST INFO ──
+const BROADCAST = {
+  // משחקי פתיחה ומיוחדים — כאן 11 פתוח
+  'default': 'כאן BOX',
+  'open': 'כאן 11',
+};
+// משחקים בשידור פתוח לפי תאריך (משחקי הפתיחה + נוקאאוט)
+const OPEN_DATES = ['2026-06-11','2026-06-12','2026-07-14','2026-07-15','2026-07-19'];
+
+function getBroadcast(m) {
+  const date = m.utcDate?.slice(0,10)||'';
+  // משחק פתיחה, חצי גמר, גמר — כאן 11
+  if(OPEN_DATES.includes(date) || m.stage==='SEMI_FINALS' || m.stage==='FINAL') return '📺 כאן 11';
+  return '📺 כאן BOX';
+}
+
+function renderScores() {
+  if (!allMatches.length) { document.getElementById('scores-content').innerHTML = '<div class="empty">אין משחקים</div>'; return; }
+  const gs = allMatches.filter(m => m.stage === 'GROUP_STAGE' && m.homeTeam?.name);
+  if (!gs.length) {
+    document.getElementById('scores-content').innerHTML = '<div class="empty">טוען משחקים...</div>';
+    return;
+  }
+  const byDate = {};
+  gs.forEach(m => {
+    const d = m.utcDate?.slice(0,10) || '?';
+    (byDate[d] = byDate[d]||[]).push(m);
+  });
+  const live = gs.filter(m => m.status==='IN_PLAY'||m.status==='PAUSED');
+  let html = '';
+  if (live.length) { html += '<div class="section-title">⚡ עכשיו</div>'; live.forEach(m => html += card(m)); }
+  const months = ['','ינו','פבר','מרץ','אפר','מאי','יוני','יולי'];
+  const today = new Date().toISOString().slice(0,10);
+  Object.keys(byDate).sort().forEach(date => {
+    const parts = date.split('-');
+    const mo = parseInt(parts[1]);
+    const d = parseInt(parts[2]);
+    const label = `${d} ${months[mo]||''}`;
+    html += `<div class="section-title">${date===today?'📅 היום — ':''}${label}</div>`;
+    byDate[date].filter(m=>m.status!=='IN_PLAY'&&m.status!=='PAUSED').forEach(m => html += card(m));
+  });
+  document.getElementById('scores-content').innerHTML = html || '<div class="empty">אין משחקים</div>';
+}
+
+function card(m) {
+  const hN = m.homeTeam?.name||'?', aN = m.awayTeam?.name||'?';
+  const hs = m.score?.fullTime?.home, as_ = m.score?.fullTime?.away;
+  const hh = m.score?.halfTime?.home, ah = m.score?.halfTime?.away;
+  const st = m.status;
+  const grp = m.group?.replace('GROUP_','') || '';
+  const mt = m.utcDate ? new Date(m.utcDate).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+
+  let statusHtml, scoreHtml;
+  if (st==='IN_PLAY') { statusHtml=`<span class="match-status live">⚡ חי</span>`; scoreHtml=`<div class="score played">${hs??0} : ${as_??0}</div>`; }
+  else if (st==='PAUSED') { statusHtml=`<span class="match-status live">⏸ הפסקה</span>`; scoreHtml=`<div class="score played">${hs??0} : ${as_??0}</div>`; }
+  else if (st==='FINISHED') { statusHtml=`<span class="match-status fin">✓ סיום</span>`; scoreHtml=`<div class="score played">${hs} : ${as_}</div>`; }
+  else { statusHtml=`<span class="match-status sched">${mt}</span>`; scoreHtml=`<div class="score">— : —</div>`; }
+
+  // Don't show predict button for started/finished matches
+  const canPredict = st!=='IN_PLAY' && st!=='PAUSED' && st!=='FINISHED';
+
+  const preds = predictions[m.id] || {};
+  const entries = Object.entries(preds);
+  let predHtml = '';
+  if (entries.length) {
+    entries.forEach(([name,p]) => {
+      let cls='has-pred', lbl=`${name}: ${p.home}:${p.away}`;
+      if (st==='FINISHED'&&hs!==null&&hs!==undefined) {
+        const exact=p.home===hs&&p.away===as_;
+        const dir=(p.home>p.away&&hs>as_)||(p.home<p.away&&hs<as_)||(p.home===p.away&&hs===as_);
+        cls=exact?'correct':dir?'has-pred':'wrong';
+        lbl+=exact?' ✓✓':dir?' ✓':' ✗';
+      }
+      predHtml+=`<div class="predict-btn ${cls}" onclick="openModal(${m.id})">${lbl}</div>
+      <div class="predict-btn del-btn" onclick="deletePrediction(${m.id},'${name}')">🗑</div>`;
+    });
+    if(st!=='IN_PLAY'&&st!=='FINISHED'&&st!=='PAUSED') predHtml+=`<div class="predict-btn" onclick="openModal(${m.id})">+ ניחוש נוסף</div>`;
+  } else {
+    predHtml=`<div class="predict-btn" onclick="openModal(${m.id})">🔮 נחש תוצאה</div>`;
+  }
+
+  const venue = m.venue || '';
+  const city = m.area?.name || '';
+  const broadcast = getBroadcast(m);
+  const venueHtml = venue ? `<div class="match-venue">🏟 ${venue}${city?' · '+city:''} &nbsp;|&nbsp; ${broadcast}</div>` : `<div class="match-venue">${broadcast}</div>`;
+
+  return `<div class="match-card">
+    <div class="match-meta">
+      <div class="match-meta-left"><span class="group-badge">בית ${grp}</span><span style="font-size:11px;color:var(--muted)">${mt}</span></div>
+      ${statusHtml}
+    </div>
+    <div class="match-body">
+      <div class="team home"><span class="team-flag">${flag(hN)}</span><span class="team-name">${he(hN)}</span></div>
+      <div class="score-box">${scoreHtml}<div class="time">${st==='FINISHED'&&hh!=null?`הפסקה ${hh}:${ah}`:''}</div></div>
+      <div class="team away"><span class="team-flag">${flag(aN)}</span><span class="team-name">${he(aN)}</span></div>
+    </div>
+    ${venueHtml}
+    <div class="predict-row">${predHtml}</div>
+  </div>`;
+}
+
+function renderGroups() {
+  // Build standings from matches
+  const groupTeams = {};
+  const teamStats = {};
+
+  allMatches.filter(m=>m.stage==='GROUP_STAGE').forEach(m=>{
+    const grp = m.group?.replace('GROUP_','')||'?';
+    const hN = m.homeTeam?.name||'?';
+    const aN = m.awayTeam?.name||'?';
+    if(!groupTeams[grp]) groupTeams[grp]=new Set();
+    groupTeams[grp].add(hN);
+    groupTeams[grp].add(aN);
+    if(!teamStats[hN]) teamStats[hN]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+    if(!teamStats[aN]) teamStats[aN]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+
+    if(m.status==='FINISHED'){
+      const hs=m.score?.fullTime?.home, as_=m.score?.fullTime?.away;
+      if(hs===null||hs===undefined) return;
+      teamStats[hN].p++; teamStats[aN].p++;
+      teamStats[hN].gf+=hs; teamStats[hN].ga+=as_;
+      teamStats[aN].gf+=as_; teamStats[aN].ga+=hs;
+      if(hs>as_){teamStats[hN].w++;teamStats[hN].pts+=3;teamStats[aN].l++;}
+      else if(hs===as_){teamStats[hN].d++;teamStats[hN].pts++;teamStats[aN].d++;teamStats[aN].pts++;}
+      else{teamStats[aN].w++;teamStats[aN].pts+=3;teamStats[hN].l++;}
+    }
+  });
+
+  const sortedGroups = Object.keys(groupTeams).sort();
+  if(!sortedGroups.length){ document.getElementById('groups-content').innerHTML='<div class="empty">טבלאות יתעדכנו עם תחילת המשחקים</div>'; return; }
+
+  let html='<div class="groups-grid">';
+  sortedGroups.forEach(grp=>{
+    const teams=[...groupTeams[grp]].sort((a,b)=>{
+      const sa=teamStats[a],sb=teamStats[b];
+      if(sb.pts!==sa.pts) return sb.pts-sa.pts;
+      return(sb.gf-sb.ga)-(sa.gf-sa.ga);
+    });
+    html+=`<div class="group-card"><div class="group-title">בית ${grp}</div><table class="gt"><tr><th>נבחרת</th><th>מ'</th><th>נ</th><th>ת</th><th>ה</th><th>±</th><th>נק'</th></tr>`;
+    teams.forEach((t,i)=>{
+      const s=teamStats[t]||{p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0};
+      const gd=s.gf-s.ga;
+      const rc=i===0?'q1':i===1?'q2':i===2?'q3':'';
+      html+=`<tr class="${rc}"><td><div class="team-cell">${flag(t)} ${he(t)}</div></td><td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${gd>0?'+':''}${gd}</td><td class="pts-cell">${s.pts}</td></tr>`;
+    });
+    html+='</table></div>';
+  });
+  html+='</div>';
+  document.getElementById('groups-content').innerHTML=html;
+}
+
+function renderLeaderboard() {
+  const scores={};
+  let done=0;
+  // Count all predictions including upcoming
+  const allPredNames = new Set();
+  Object.values(predictions).forEach(mp => Object.keys(mp).forEach(n => allPredNames.add(n)));
+  
+  allMatches.forEach(m=>{
+    if(m.status!=='FINISHED')return;
+    const hs=m.score?.fullTime?.home, as_=m.score?.fullTime?.away;
+    if(hs===null||hs===undefined)return;
+    done++;
+    Object.entries(predictions[m.id]||{}).forEach(([name,p])=>{
+      if(!scores[name])scores[name]={pts:0,exact:0,dir:0,total:0,pending:0};
+      scores[name].total++;
+      const exact=p.home===hs&&p.away===as_;
+      const dir=(p.home>p.away&&hs>as_)||(p.home<p.away&&hs<as_)||(p.home===p.away&&hs===as_);
+      if(exact){scores[name].pts+=3;scores[name].exact++;}
+      else if(dir){scores[name].pts+=1;scores[name].dir++;}
+    });
+  });
+  // Add pending predictions
+  allPredNames.forEach(name=>{
+    if(!scores[name])scores[name]={pts:0,exact:0,dir:0,total:0,pending:0};
+    let pending=0;
+    Object.entries(predictions).forEach(([mid,mp])=>{
+      if(mp[name]){
+        const m=allMatches.find(x=>x.id==mid);
+        if(m&&m.status!=='FINISHED') pending++;
+      }
+    });
+    scores[name].pending=pending;
+  });
+
+  document.getElementById('lb-games-count').textContent=`${done} משחקים סיימו`;
+  const sorted=Object.entries(scores).sort((a,b)=>b[1].pts-a[1].pts);
+  if(!sorted.length){
+    document.getElementById('lb-content').innerHTML='<div class="empty">אין תחזיות עדיין<br><small>לחץ על משחק כדי לנחש תוצאה 🔮</small></div>';
+    return;
+  }
+  const medals=['🥇','🥈','🥉'];
+  let html=sorted.map(([name,s],i)=>`
+    <div class="lb-row">
+      <div class="lb-rank">${medals[i]||i+1}</div>
+      <div>
+        <div class="lb-name">${name}</div>
+        <div class="lb-detail">מדויק: ${s.exact} ✓✓ &nbsp;•&nbsp; כיוון: ${s.dir} ✓ &nbsp;•&nbsp; ממתין: ${s.pending} ⏳</div>
+      </div>
+      <div class="lb-pts">${s.pts} נק'</div>
+    </div>`).join('');
+  document.getElementById('lb-content').innerHTML=`<div class="lb-card">${html}</div>`;
+}
+
+function deletePrediction(matchId, name) {
+  if(!confirm(`למחוק את הניחוש של ${name}?`)) return;
+  if(predictions[matchId]) {
+    delete predictions[matchId][name];
+    if(!Object.keys(predictions[matchId]).length) delete predictions[matchId];
+  }
+  savePreds(); renderScores(); renderLeaderboard(); renderStats();
+}
+
+function renderStats() {
+  const played = allMatches.filter(m=>m.status==='FINISHED').length;
+  const total = allMatches.filter(m=>m.stage==='GROUP_STAGE').length;
+  let totalGoals=0, maxGoals=0, maxMatch=null;
+  const gbt={};
+  allMatches.forEach(m=>{
+    if(m.status!=='FINISHED') return;
+    const hs=m.score?.fullTime?.home, as_=m.score?.fullTime?.away;
+    if(hs===null||hs===undefined) return;
+    const g=hs+as_; totalGoals+=g;
+    gbt[m.homeTeam?.name]=(gbt[m.homeTeam?.name]||0)+hs;
+    gbt[m.awayTeam?.name]=(gbt[m.awayTeam?.name]||0)+as_;
+    if(g>maxGoals){maxGoals=g;maxMatch=m;}
+  });
+  const avg=played>0?(totalGoals/played).toFixed(1):'—';
+  const top=Object.entries(gbt).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  let html=`<div class="stats-bar">
+    <div class="stat-item"><div class="stat-num">${played}/${total}</div><div class="stat-label">משחקים שוחקו</div></div>
+    <div class="stat-item"><div class="stat-num">${totalGoals}</div><div class="stat-label">סה"כ שערים</div></div>
+    <div class="stat-item"><div class="stat-num">${avg}</div><div class="stat-label">שערים למשחק</div></div>
+  </div>`;
+
+  if(top.length){
+    html+='<div class="lb-card"><div class="lb-header">⚽ מובילות בשערים</div>';
+    top.forEach(([t,g])=>{
+      const pct=Math.min(Math.round((g/Math.max(totalGoals,1))*300),100);
+      html+=`<div class="lb-row" style="gap:8px">
+        <span style="min-width:100px;font-size:13px">${flag(t)} ${he(t)}</span>
+        <div style="flex:1;background:var(--surface2);border-radius:4px;height:8px">
+          <div style="width:${pct}%;background:var(--accent);height:8px;border-radius:4px"></div>
+        </div>
+        <span style="font-weight:900;color:var(--accent);min-width:20px">${g}</span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  if(maxMatch){
+    const s=allMatches.find(x=>x.id===maxMatch.id)?.score?.fullTime;
+    html+=`<div class="lb-card" style="margin-top:10px"><div class="lb-header">🔥 הכי הרבה שערים במשחק</div>
+      <div class="lb-row">${flag(maxMatch.homeTeam?.name)} ${he(maxMatch.homeTeam?.name)} <strong>${s?.home}:${s?.away}</strong> ${he(maxMatch.awayTeam?.name)} ${flag(maxMatch.awayTeam?.name)} — ${maxGoals} שערים</div>
+    </div>`;
+  }
+  if(!played) html+='<div class="empty">סטטיסטיקות יופיעו לאחר תחילת המשחקים ⚽</div>';
+  document.getElementById('stats-content').innerHTML=html;
+}
+  const m=allMatches.find(x=>x.id===id);if(!m)return;
+  if(m.status==='IN_PLAY'||m.status==='PAUSED'||m.status==='FINISHED'){alert('לא ניתן לנחש לאחר תחילת המשחק');return;}
+  currentMatchId=id;
+  const hN=m.homeTeam?.name||'?', aN=m.awayTeam?.name||'?';
+  document.getElementById('modal-teams').innerHTML=`${flag(hN)} ${he(hN)} <span style="color:var(--muted)">נגד</span> ${he(aN)} ${flag(aN)}`;
+  document.getElementById('pred-name').value=localStorage.getItem('wc2026_myname')||'';
+  document.getElementById('pred-home').value='';
+  document.getElementById('pred-away').value='';
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('pred-home').focus(),100);
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');currentMatchId=null;}
+function savePrediction(){
+  const name=document.getElementById('pred-name').value.trim();
+  const h=parseInt(document.getElementById('pred-home').value);
+  const a=parseInt(document.getElementById('pred-away').value);
+  if(!name){alert('הכנס שם');return;}
+  if(isNaN(h)||isNaN(a)||h<0||a<0){alert('הכנס תוצאה תקינה');return;}
+  localStorage.setItem('wc2026_myname',name);
+  if(!predictions[currentMatchId])predictions[currentMatchId]={};
+  predictions[currentMatchId][name]={home:h,away:a,ts:Date.now()};
+  savePreds();closeModal();renderScores();renderLeaderboard();renderStats();
+}
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  ['scores','groups','leaderboard','stats'].forEach((n,i)=>{if(n===p)document.querySelectorAll('.tab')[i].classList.add('active');});
+}
+function renderAll(){ renderScores(); renderGroups(); renderLeaderboard(); renderStats(); }
+loadAll();
+setInterval(loadAll,60000);
+</script>
+</body>
+</html>
