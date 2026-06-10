@@ -802,14 +802,15 @@ function skipGroup() {
   document.getElementById('group-modal-bg').style.display = 'none';
 }
 
-// Check if already in a group
+// Show group modal only if not in a group yet
 if(currentGroupCode) {
-  document.getElementById('group-modal-bg').style.display = 'none';
   loadGroupPredictions(currentGroupCode);
   setTimeout(() => {
     document.getElementById('group-indicator').textContent = '👥 ' + currentGroupCode;
     document.getElementById('group-indicator').style.display = 'block';
   }, 100);
+} else {
+  document.getElementById('group-modal-bg').style.display = 'flex';
 }
 
 loadAll();
@@ -834,7 +835,7 @@ if('serviceWorker' in navigator) {
 </script>
 
 <!-- GROUP MODAL -->
-<div class="modal-bg" id="group-modal-bg" style="display:flex">
+<div class="modal-bg" id="group-modal-bg">
   <div class="modal">
     <h3>🏆 מונדיאל 2026</h3>
     <div style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px">הצטרף לקבוצת חברים או צור קבוצה חדשה</div>
