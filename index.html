@@ -277,6 +277,29 @@
 
 <script>
 const API_PROXY = '/.netlify/functions/api';
+const MATCH_DATA = {
+  537327: {bc:"כאן 11", city:"מקסיקו סיטי"},
+  537328: {bc:"כאן BOX", city:"גוואדלחארה"},
+  537333: {bc:"כאן BOX", city:"טורונטו"},
+  537334: {bc:"כאן BOX", city:"סן פרנסיסקו"},
+  537339: {bc:"כאן BOX", city:"דאלאס"},
+  537340: {bc:"כאן BOX", city:"סיאטל"},
+  537345: {bc:"כאן BOX", city:"לוס אנג'לס"},
+  537346: {bc:"כאן BOX", city:"קנזס סיטי"},
+  537351: {bc:"כאן BOX", city:"פילדלפיה"},
+  537352: {bc:"כאן BOX", city:"מיאמי"},
+  537357: {bc:"כאן BOX", city:"ניו יורק"},
+  537358: {bc:"כאן BOX", city:"בוסטון"},
+  537363: {bc:"כאן BOX", city:"הוסטון"},
+  537364: {bc:"כאן BOX", city:"שיקגו"},
+  537369: {bc:"כאן BOX", city:"אטלנטה"},
+  537370: {bc:"כאן BOX", city:"וושינגטון"},
+  537391: {bc:"כאן BOX", city:"מונטריאול"},
+  537392: {bc:"כאן BOX", city:"ונקובר"},
+  537397: {bc:"כאן BOX", city:"מקסיקו סיטי"},
+  537398: {bc:"כאן BOX", city:"גוואדלחארה"},
+};
+
 const STORAGE_KEY = 'wc2026_predictions_v2';
 const OPEN_DATES = ['2026-06-11','2026-06-12','2026-07-14','2026-07-15','2026-07-19'];
 
@@ -341,12 +364,17 @@ function he(n){return NAME_HE[n]||n}
 function tla(n){return TLA[n]||n?.slice(0,3).toUpperCase()||'?'}
 function crest(m){return m?.crest||''}
 function getBroadcast(m){
+  if(MATCH_DATA[m.id]) return MATCH_DATA[m.id].bc;
   const d=m.utcDate?.slice(0,10)||'';
   if(OPEN_DATES.includes(d)||m.stage==='SEMI_FINALS'||m.stage==='FINAL') return 'כאן 11';
   return 'כאן BOX';
 }
+function getCity(m){
+  if(MATCH_DATA[m.id]) return MATCH_DATA[m.id].city;
+  return '';
+}
 function localTime(utc){
-  return new Date(utc).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  return new Date(utc).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
 function dateLabel(utc){
   const d=new Date(utc);
@@ -514,7 +542,7 @@ function showMatch(id){
   const ics=`data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:${dtStart}%0ADTEND:${dtEnd}%0ASUMMARY:${calTitle}%0AEND:VEVENT%0AEND:VCALENDAR`;
 
   // Build info-row
-  const city = (m.area?.name && m.area.name !== 'World' && m.area.name !== 'INT') ? m.area.name : '—';
+  const city = getCity(m) || (m.area?.name && m.area.name !== 'World' ? m.area.name : '—');
   const infoRow=`<div class="info-row">
     <div class="info-cell" style="flex:1;text-align:right"><div class="val">📺 ${bc}</div><div class="lbl">שידור</div></div>
     <div class="info-cell" style="flex:1;text-align:center;border-right:1px solid var(--border);border-left:1px solid var(--border)"><div class="val">—</div><div class="lbl">שדרן</div></div>
