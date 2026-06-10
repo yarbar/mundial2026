@@ -180,6 +180,23 @@
   .btn-save { width:100%; background:var(--accent); color:#fff; font-size:15px; font-weight:800; padding:13px; border:none; border-radius:10px; cursor:pointer; }
   .btn-cancel { width:100%; background:transparent; color:var(--muted); font-size:13px; padding:10px; border:none; cursor:pointer; margin-top:6px; }
 </style>
+
+<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4SzS29OnMtIFwbRNFCnQw8qCJPnJ4y9Y",
+    authDomain: "mundial2026-dde85.firebaseapp.com",
+    databaseURL: "https://mundial2026-dde85-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mundial2026-dde85",
+    storageBucket: "mundial2026-dde85.firebasestorage.app",
+    messagingSenderId: "880131283920",
+    appId: "1:880131283920:web:cb3146bf5c083e022b77d5",
+    measurementId: "G-MXHNS0TFCV"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
 </head>
 <body class="dark">
 
@@ -188,6 +205,7 @@
   <div class="header-top">
     <div class="logo"><h1>🏆 מונדיאל <span>2026</span></h1></div>
     <div class="header-right">
+      <span id="group-indicator" style="display:none;font-size:11px;color:var(--accent2);font-weight:700;cursor:pointer" onclick="changeGroup()"></span>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️</button>
       <div class="live-badge"><div class="live-dot"></div> עדכון חי</div>
     </div>
@@ -294,10 +312,31 @@ const TLA = {
 const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const MONTHS = ['','ינו','פבר','מרץ','אפר','מאי','יוני','יולי','אוג','ספט','אוק','נוב','דצמ'];
 
-let allMatches=[], predictions=loadPreds(), currentMatchId=null, cdTimer=null;
+let allMatches=[], predictions={}, currentMatchId=null, cdTimer=null;
+let currentGroupCode = localStorage.getItem('wc2026_group') || null;
 
 function loadPreds(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch(e){return{}}}
 function savePreds(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(predictions))}catch(e){}}
+
+function loadGroupPredictions(groupCode) {
+  db.ref('groups/' + groupCode + '/predictions').on('value', snap => {
+    const data = snap.val() || {};
+    Object.keys(data).forEach(matchId => {
+      predictions[matchId] = {};
+      Object.keys(data[matchId]).forEach(name => {
+        predictions[matchId][name] = data[matchId][name];
+      });
+    });
+    renderScores();
+    renderLeaderboard();
+  });
+}
+
+function savePredToFirebase(groupCode, matchId, name, home, away) {
+  db.ref('groups/' + groupCode + '/predictions/' + matchId + '/' + name).set({
+    home: home, away: away, ts: Date.now()
+  });
+}
 function he(n){return NAME_HE[n]||n}
 function tla(n){return TLA[n]||n?.slice(0,3).toUpperCase()||'?'}
 function crest(m){return m?.crest||''}
@@ -474,17 +513,12 @@ function showMatch(id){
   const gcal=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${dtStart}/${dtEnd}&details=${calDetails}`;
   const ics=`data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ADTSTART:${dtStart}%0ADTEND:${dtEnd}%0ASUMMARY:${calTitle}%0AEND:VEVENT%0AEND:VCALENDAR`;
 
-  // Build info-row: broadcast left-aligned under RSA, city right-aligned under MEX
+  // Build info-row
+  const city = (m.area?.name && m.area.name !== 'World' && m.area.name !== 'INT') ? m.area.name : '—';
   const infoRow=`<div class="info-row">
-    <div class="info-cell" style="flex:1;text-align:right">
-      <div class="val">📺 ${bc}</div><div class="lbl">שידור</div>
-    </div>
-    <div class="info-cell" style="flex:1;text-align:center;border-left:1px solid var(--border)">
-      <div class="val">${m.venue||'—'}</div><div class="lbl">אצטדיון</div>
-    </div>
-    <div class="info-cell" style="flex:1;text-align:left">
-      <div class="val">${m.area?.name||'—'}</div><div class="lbl">עיר</div>
-    </div>
+    <div class="info-cell" style="flex:1;text-align:right"><div class="val">📺 ${bc}</div><div class="lbl">שידור</div></div>
+    <div class="info-cell" style="flex:1;text-align:center;border-right:1px solid var(--border);border-left:1px solid var(--border)"><div class="val">—</div><div class="lbl">שדרן</div></div>
+    <div class="info-cell" style="flex:1;text-align:left"><div class="val">${city}</div><div class="lbl">עיר</div></div>
   </div>`;
 
   document.getElementById('match-content').innerHTML=`
@@ -684,8 +718,12 @@ function savePrediction(){
   localStorage.setItem('wc2026_myname',name);
   if(!predictions[currentMatchId]) predictions[currentMatchId]={};
   predictions[currentMatchId][name]={home:h,away:a,ts:Date.now()};
-  savePreds(); closeModal(); renderScores(); renderLeaderboard();
-  // If on match page, refresh it
+  savePreds();
+  // Save to Firebase if in a group
+  if(currentGroupCode) {
+    savePredToFirebase(currentGroupCode, currentMatchId, name, h, a);
+  }
+  closeModal(); renderScores(); renderLeaderboard();
   if(document.getElementById('page-match').classList.contains('active')) showMatch(currentMatchId);
 }
 function deletePrediction(matchId,name){
@@ -715,8 +753,49 @@ function toggleTheme(){
 const savedTheme=localStorage.getItem('wc2026_theme');
 if(savedTheme){document.body.className=savedTheme;document.getElementById('theme-btn').textContent=savedTheme==='light'?'🌙':'☀️';}
 
+// ── GROUP FUNCTIONS ──
+function joinGroup() {
+  const name = document.getElementById('group-username').value.trim();
+  const code = document.getElementById('group-code-input').value.trim().toUpperCase();
+  if(!name) { alert('הכנס שם'); return; }
+  if(!code) { alert('הכנס קוד קבוצה'); return; }
+  localStorage.setItem('wc2026_myname', name);
+  localStorage.setItem('wc2026_group', code);
+  currentGroupCode = code;
+  document.getElementById('group-modal-bg').style.display = 'none';
+  // Load group indicator
+  document.getElementById('group-indicator').textContent = '👥 ' + code;
+  document.getElementById('group-indicator').style.display = 'block';
+  // Load predictions from Firebase
+  loadGroupPredictions(code);
+}
+
+function skipGroup() {
+  document.getElementById('group-modal-bg').style.display = 'none';
+}
+
+// Check if already in a group
+if(currentGroupCode) {
+  document.getElementById('group-modal-bg').style.display = 'none';
+  loadGroupPredictions(currentGroupCode);
+  setTimeout(() => {
+    document.getElementById('group-indicator').textContent = '👥 ' + currentGroupCode;
+    document.getElementById('group-indicator').style.display = 'block';
+  }, 100);
+}
+
 loadAll();
 setInterval(loadAll,60000);
+
+function changeGroup() {
+  if(confirm('לשנות קבוצה?')) {
+    localStorage.removeItem('wc2026_group');
+    currentGroupCode = null;
+    predictions = {};
+    document.getElementById('group-indicator').style.display = 'none';
+    document.getElementById('group-modal-bg').style.display = 'flex';
+  }
+}
 
 // Register Service Worker
 if('serviceWorker' in navigator) {
@@ -725,5 +804,24 @@ if('serviceWorker' in navigator) {
     .catch(e => console.log('SW error:', e));
 }
 </script>
+
+<!-- GROUP MODAL -->
+<div class="modal-bg" id="group-modal-bg" style="display:flex">
+  <div class="modal">
+    <h3>🏆 מונדיאל 2026</h3>
+    <div style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px">הצטרף לקבוצת חברים או צור קבוצה חדשה</div>
+    <div class="modal-name-row">
+      <label>השם שלך</label>
+      <input class="name-input" id="group-username" placeholder="לדוגמה: יוסי" maxlength="20">
+    </div>
+    <div class="modal-name-row" style="margin-bottom:8px">
+      <label>קוד קבוצה</label>
+      <input class="name-input" id="group-code-input" placeholder="לדוגמה: FRIENDS24" maxlength="12" style="text-transform:uppercase">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;text-align:center">אם אין לך קוד — המציא אחד וצור קבוצה חדשה</div>
+    <button class="btn-save" onclick="joinGroup()">כניסה / יצירת קבוצה ✓</button>
+    <button class="btn-cancel" onclick="skipGroup()">כניסה ללא קבוצה</button>
+  </div>
+</div>
 </body>
 </html>
