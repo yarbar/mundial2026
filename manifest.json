@@ -1,0 +1,29 @@
+{
+  "name": "מונדיאל 2026",
+  "short_name": "מונדיאל",
+  "description": "עקוב אחרי משחקי מונדיאל 2026 בזמן אמת",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1117",
+  "theme_color": "#0f1420",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "https://cdn.jsdelivr.net/npm/twemoji@14/assets/72x72/1f3c6.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.jsdelivr.net/npm/twemoji@14/assets/72x72/1f3c6.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.jsdelivr.net/npm/twemoji@14/assets/72x72/1f3c6.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
