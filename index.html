@@ -180,23 +180,6 @@
   .btn-save { width:100%; background:var(--accent); color:#fff; font-size:15px; font-weight:800; padding:13px; border:none; border-radius:10px; cursor:pointer; }
   .btn-cancel { width:100%; background:transparent; color:var(--muted); font-size:13px; padding:10px; border:none; cursor:pointer; margin-top:6px; }
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyC4SzS29OnMtIFwbRNFCnQw8qCJPnJ4y9Y",
-    authDomain: "mundial2026-dde85.firebaseapp.com",
-    databaseURL: "https://mundial2026-dde85-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mundial2026-dde85",
-    storageBucket: "mundial2026-dde85.firebasestorage.app",
-    messagingSenderId: "880131283920",
-    appId: "1:880131283920:web:cb3146bf5c083e022b77d5",
-    measurementId: "G-MXHNS0TFCV"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
 </head>
 <body class="dark">
 
@@ -852,5 +835,22 @@ if('serviceWorker' in navigator) {
     <button class="btn-cancel" onclick="skipGroup()">כניסה ללא קבוצה</button>
   </div>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4SzS29OnMtIFwbRNFCnQw8qCJPnJ4y9Y",
+    authDomain: "mundial2026-dde85.firebaseapp.com",
+    databaseURL: "https://mundial2026-dde85-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mundial2026-dde85",
+    storageBucket: "mundial2026-dde85.firebasestorage.app",
+    messagingSenderId: "880131283920",
+    appId: "1:880131283920:web:cb3146bf5c083e022b77d5",
+    measurementId: "G-MXHNS0TFCV"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
 </body>
 </html>
