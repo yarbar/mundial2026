@@ -283,6 +283,7 @@ const MATCH_DATA = {
   537398: {bc:"כאן BOX", city:"גוואדלחארה"},
 };
 
+let db = null; // initialized after Firebase loads
 const STORAGE_KEY = 'wc2026_predictions_v2';
 const OPEN_DATES = ['2026-06-11','2026-06-12','2026-07-14','2026-07-15','2026-07-19'];
 
@@ -325,6 +326,7 @@ function loadPreds(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{
 function savePreds(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(predictions))}catch(e){}}
 
 function loadGroupPredictions(groupCode) {
+  if(!db) { setTimeout(() => loadGroupPredictions(groupCode), 500); return; }
   db.ref('groups/' + groupCode + '/predictions').on('value', snap => {
     const data = snap.val() || {};
     Object.keys(data).forEach(matchId => {
@@ -339,6 +341,7 @@ function loadGroupPredictions(groupCode) {
 }
 
 function savePredToFirebase(groupCode, matchId, name, home, away) {
+  if(!db) return;
   db.ref('groups/' + groupCode + '/predictions/' + matchId + '/' + name).set({
     home: home, away: away, ts: Date.now()
   });
@@ -786,13 +789,7 @@ function skipGroup() {
 }
 
 // Show group modal only if not in a group yet
-if(currentGroupCode) {
-  loadGroupPredictions(currentGroupCode);
-  setTimeout(() => {
-    document.getElementById('group-indicator').textContent = '👥 ' + currentGroupCode;
-    document.getElementById('group-indicator').style.display = 'block';
-  }, 100);
-} else {
+if(!currentGroupCode) {
   document.getElementById('group-modal-bg').style.display = 'flex';
 }
 
@@ -850,7 +847,13 @@ if('serviceWorker' in navigator) {
     measurementId: "G-MXHNS0TFCV"
   };
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  db = firebase.database();
+  // Firebase ready - load group if exists
+  if(currentGroupCode) {
+    loadGroupPredictions(currentGroupCode);
+    const gi = document.getElementById('group-indicator');
+    if(gi) { gi.textContent = '👥 ' + currentGroupCode; gi.style.display = 'block'; }
+  }
 </script>
 </body>
 </html>
