@@ -1,5 +1,5 @@
-const CACHE = 'mundial2026-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'mundial2026-v3';
+const ASSETS = ['/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -7,24 +7,31 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-  // API calls — always from network
-  if (e.request.url.includes('netlify/functions')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {headers:{'Content-Type':'application/json'}})));
+  // Never cache API calls or netlify functions
+  if (e.request.url.includes('netlify/functions') || 
+      e.request.url.includes('football-data') ||
+      e.request.url.includes('firebasedatabase') ||
+      e.request.url.includes('firebase')) {
+    e.respondWith(fetch(e.request));
     return;
   }
-  // Everything else — cache first, then network
+  // Network first for HTML
+  if (e.request.url.endsWith('.html') || e.request.url.endsWith('/')) {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
+  // Cache first for assets
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
-      return res;
-    }))
+    caches.match(e.request).then(cached => cached || fetch(e.request))
   );
 });
+
