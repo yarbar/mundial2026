@@ -833,27 +833,37 @@ if('serviceWorker' in navigator) {
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyC4SzS29OnMtIFwbRNFCnQw8qCJPnJ4y9Y",
-    authDomain: "mundial2026-dde85.firebaseapp.com",
-    databaseURL: "https://mundial2026-dde85-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mundial2026-dde85",
-    storageBucket: "mundial2026-dde85.firebasestorage.app",
-    messagingSenderId: "880131283920",
-    appId: "1:880131283920:web:cb3146bf5c083e022b77d5",
-    measurementId: "G-MXHNS0TFCV"
+// Load Firebase async - doesn't block page load
+function loadFirebase() {
+  const s1 = document.createElement('script');
+  s1.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+  s1.onload = function() {
+    const s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+    s2.onload = function() {
+      firebase.initializeApp({
+        apiKey: "AIzaSyC4SzS29OnMtIFwbRNFCnQw8qCJPnJ4y9Y",
+        authDomain: "mundial2026-dde85.firebaseapp.com",
+        databaseURL: "https://mundial2026-dde85-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "mundial2026-dde85",
+        storageBucket: "mundial2026-dde85.firebasestorage.app",
+        messagingSenderId: "880131283920",
+        appId: "1:880131283920:web:cb3146bf5c083e022b77d5"
+      });
+      db = firebase.database();
+      if(currentGroupCode) {
+        loadGroupPredictions(currentGroupCode);
+        const gi = document.getElementById('group-indicator');
+        if(gi) { gi.textContent = '👥 ' + currentGroupCode; gi.style.display = 'block'; }
+      }
+    };
+    document.head.appendChild(s2);
   };
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  // Firebase ready - load group if exists
-  if(currentGroupCode) {
-    loadGroupPredictions(currentGroupCode);
-    const gi = document.getElementById('group-indicator');
-    if(gi) { gi.textContent = '👥 ' + currentGroupCode; gi.style.display = 'block'; }
-  }
+  document.head.appendChild(s1);
+}
+// Load Firebase after page is ready
+window.addEventListener('load', loadFirebase);
 </script>
 </body>
 </html>
